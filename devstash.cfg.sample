@@ -1,0 +1,17 @@
+[default]
+# choose one of those
+
+# 1. http server url
+#uri = https://example.com:9000
+
+# 2. path should be abspath. can not use user and password.
+#uri = ssh://example.com/path/to/storedir
+
+# 3. localfile, abspath
+#uri = file:///path/to/storedir
+
+[server]
+# used when run as a HTTP/HTTPS server
+port = 9000
+directory = /path/to/storedir
+
