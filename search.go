@@ -2,11 +2,11 @@ package main
 
 import (
 	"bitbucket.org/oov/go-shellinford/shellinford"
-	"os"
-	"net/url"
-	"path/filepath"
 	"fmt"
 	"io/ioutil"
+	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -14,7 +14,7 @@ import (
 func EnsureFMIndex(path string) (*shellinford.FMIndex, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		of, err := os.Create(path)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
@@ -37,8 +37,7 @@ func EnsureFMIndex(path string) (*shellinford.FMIndex, error) {
 	return fm, nil
 }
 
-
-func MakeIndex(config Config) error{
+func MakeIndex(config Config) error {
 	u, err := url.Parse(config.Default.Uri)
 	if err != nil {
 		return err
@@ -59,10 +58,9 @@ func MakeIndex(config Config) error{
 	// split by new line
 	lines := strings.Split(string(contents), "\n")
 
-
 	fmt.Printf("Index creating ")
 
-	for _, l := range lines{
+	for _, l := range lines {
 		finfo := ReadFileInfo(l)
 		add(fm, config, finfo.Path)
 	}
@@ -79,13 +77,11 @@ func MakeIndex(config Config) error{
 	err = fm.Write(of)
 	if err != nil {
 		fmt.Printf("ERROR: Write FMIndex File at MakeIndex")
-		return  err
+		return err
 	}
-
 
 	return nil
 }
-
 
 func add(fm *shellinford.FMIndex, config Config, filepath string) error {
 	contents, err := ioutil.ReadFile(filepath)
@@ -100,7 +96,6 @@ func add(fm *shellinford.FMIndex, config Config, filepath string) error {
 
 	return nil
 }
-
 
 func Search(config Config, searchword string) error {
 	u, err := url.Parse(config.Default.Uri)
@@ -122,4 +117,3 @@ func Search(config Config, searchword string) error {
 
 	return nil
 }
-

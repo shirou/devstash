@@ -2,10 +2,24 @@
 
 <body>
 
+<h2>/dev/stash </h2>
+
+<table>
+<tr>
+  <th>Created</th>
+  <th>FileName</th>
+  <th>Header</th>
+</tr>
+
 {{range .}}
-    <li>{{.Created}} <a href="{{ .LinkPath }}">{{.Basename}}</a> {{ .Head }}</li>
+    <tr>
+    <td>{{.Created}}</td>
+    <td><a href="{{ .LinkPath }}">{{.Basename}}</a></td>
+    <td>{{ .Head }}</td>
+    </tr>
 {{end}}
 
+</table>
 
 </body>
 </html>

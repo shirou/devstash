@@ -3,11 +3,12 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"path/filepath"
-	"time"
-	"strings"
-	"sort"
+	"errors"
 	"io/ioutil"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
 )
 
 const FILENAME_LEN = 40
@@ -18,7 +19,7 @@ func makeHashedFileName(contents []byte) string {
 	hasher := sha256.New()
 
 	now := time.Now()
-	now_b, _ := now.GobEncode()  // append current time to make unique
+	now_b, _ := now.GobEncode() // append current time to make unique
 	t := hasher.Sum(append(contents, now_b...))
 
 	return hex.EncodeToString(t)[:FILENAME_LEN]
@@ -45,18 +46,37 @@ func readIndexFile(path string, max_results int) ([]FileInfo, error) {
 	}
 	// split by new line
 	lines := strings.Split(string(contents), "\n")
-	sort.Sort(sort.Reverse(sort.StringSlice(lines)))  // reverse from latest
+	sort.Sort(sort.Reverse(sort.StringSlice(lines))) // reverse from latest
 
 	max := max_results
 	if len(lines) < max_results {
-		max = len(lines) -1
+		max = len(lines) - 1
 	}
 
 	finfo_list := []FileInfo{}
-	for _, l := range lines[0:max]{
+	for _, l := range lines[0:max] {
 		f := ReadFileInfo(l)
 		finfo_list = append(finfo_list, f)
 	}
 
 	return finfo_list, nil
+}
+
+func searchFile(filename string, root string) (FileInfo, error) {
+	index_filepath := filepath.Join(root, INDEX_FILE_NAME)
+	contents, err := ioutil.ReadFile(index_filepath)
+	if err != nil {
+		return FileInfo{}, err
+	}
+	// split by new line
+	lines := strings.Split(string(contents), "\n")
+
+	for _, l := range lines {
+		f := ReadFileInfo(l)
+		if strings.HasSuffix(filename, f.Path) {
+			return f, nil
+		}
+	}
+
+	return FileInfo{}, errors.New("Not found:" + filename)
 }

@@ -1,25 +1,25 @@
 package main
 
 import (
-	"time"
-	"strings"
-	"os"
 	"fmt"
 	"net"
-	"path/filepath"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 // file information. This will be added to index file as LTSV
 type FileInfo struct {
-	Created time.Time
-	Tags []string
-	Path string  // stored abs filepath
-	OrigPath  string  // if file
-	SenderAddr string  // sender host address if http or ssh
+	Created        time.Time
+	Tags           []string
+	Path           string // stored abs filepath
+	OrigPath       string // if file
+	SenderAddr     string // sender host address if http or ssh
 	SenderHostname string // sender host name if http or ssh
-	Head string // first line of contents.
-	FileType string // MIME filetype
+	Head           string // first line of contents.
+	FileType       string // MIME filetype
 }
 
 // Make one line string from a FileInfo to append a index file
@@ -37,15 +37,15 @@ func (finfo FileInfo) MakeIndexFormat() string {
 		"filetype:" + finfo.FileType,
 	}
 
-	return strings.Join(buf, "\t")  // return as LTSV
+	return strings.Join(buf, "\t") // return as LTSV
 }
 
 // make string which is used by list
 func (finfo FileInfo) MakeListString(method string) string {
-//	MAX_HEAD := 10
+	//	MAX_HEAD := 10
 	format := "%s\t%s\t%s\t%s"
 
-	time := finfo.Created.Format(time.RFC3339)[:19]  // only needs sec
+	time := finfo.Created.Format(time.RFC3339)[:19] // only needs sec
 	tag := strings.Join(finfo.Tags, ",")
 	path := filepath.Base(finfo.Path)[:FILENAME_LEN]
 	head := finfo.Head
@@ -69,7 +69,7 @@ func NewFileInfo(tags []string, contents []byte, stored string, orig string) Fil
 
 	head := ""
 	if strings.HasPrefix(filetype, "text/") {
-		head = strings.Split(string(contents), "\n")[0]  // get first line if text
+		head = strings.Split(string(contents), "\n")[0] // get first line if text
 	}
 
 	return FileInfo{
@@ -77,7 +77,7 @@ func NewFileInfo(tags []string, contents []byte, stored string, orig string) Fil
 		tags,
 		stored,
 		orig,
-		addrs[0],  // only first address
+		addrs[0], // only first address
 		hostname,
 		head,
 		filetype,
@@ -88,32 +88,32 @@ func ReadFileInfo(line string) FileInfo {
 	f := strings.Split(strings.TrimSpace(line), "\t")
 
 	finfo := FileInfo{}
-	for _, l := range f{
+	for _, l := range f {
 		lv := strings.Split(l, ":")
 		label := lv[0]
 		value := strings.Join(lv[1:], ":")
 
 		switch label {
-			case "time":
+		case "time":
 			t, err := time.Parse(time.RFC3339, value)
-			if err != nil{
+			if err != nil {
 				fmt.Println(err)
 				return finfo
 			}
 			finfo.Created = t
-			case "tags":
+		case "tags":
 			finfo.Tags = strings.Split(value, ",")
-			case "path":
+		case "path":
 			finfo.Path = value
-			case "orig":
+		case "orig":
 			finfo.OrigPath = value
-			case "addr":
+		case "addr":
 			finfo.SenderAddr = value
-			case "host":
+		case "host":
 			finfo.SenderHostname = value
-			case "head":
+		case "head":
 			finfo.Head = value
-			case "filetype":
+		case "filetype":
 			finfo.FileType = value
 		}
 	}
@@ -121,11 +121,9 @@ func ReadFileInfo(line string) FileInfo {
 	return finfo
 }
 
-
 func (finfo FileInfo) Basename() string {
 	return filepath.Base(finfo.Path)
 }
 func (finfo FileInfo) LinkPath() string {
-	return makeHashedDirName(filepath.Base(finfo.Path))
+	return "/s/" + filepath.Base(finfo.Path)
 }
-
