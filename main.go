@@ -95,7 +95,7 @@ func main() {
 	if strings.HasPrefix(conf.Default.Uri, "ssh://") {
 		method = Method_ssh{}
 	} else if strings.HasPrefix(conf.Default.Uri, "http://") || strings.HasPrefix(conf.Default.Uri, "https://") {
-		fmt.Println("http")
+		method = Method_http{}
 	} else if strings.HasPrefix(conf.Default.Uri, "file://") {
 		method = Method_file{}
 	} else {

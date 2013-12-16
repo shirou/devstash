@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"html"
 	"html/template"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"os"
-	"io"
-	"mime/multipart"
 )
 
 type DevStashHTTP struct {
@@ -19,7 +19,7 @@ type DevStashHTTP struct {
 }
 
 func (d DevStashHTTP) storeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST"{
+	if r.Method != "POST" {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -51,7 +51,7 @@ func (d DevStashHTTP) storeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		finfo := NewFileInfoWithAddr([]string{}, contents, dst, files[i].Filename,"", r.RemoteAddr)
+		finfo := NewFileInfoWithAddr([]string{}, contents, dst, files[i].Filename, "", r.RemoteAddr)
 
 		err = finfo.addIndex(index_filepath)
 		if err != nil {
@@ -113,8 +113,7 @@ func (d DevStashHTTP) StartHTTPServer() {
 	}
 }
 
-
-func (d DevStashHTTP) storeMultiPartFile(file multipart.File) (string, []byte, error){
+func (d DevStashHTTP) storeMultiPartFile(file multipart.File) (string, []byte, error) {
 	contents, err := ioutil.ReadAll(file)
 	if err != nil {
 		return "", []byte{}, err

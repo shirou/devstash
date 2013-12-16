@@ -4,13 +4,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
-	"os"
-	"fmt"
 )
 
 const FILENAME_LEN = 40
@@ -82,7 +82,6 @@ func searchFile(filename string, root string) (FileInfo, error) {
 
 	return FileInfo{}, errors.New("Not found:" + filename)
 }
-
 
 func ensureStoreDir(path string, index_filepath string) {
 	// checking store dir. creates if not exists

@@ -24,7 +24,6 @@ func (m Method_ssh) SendStdin(config Config, tags []string, contents []byte) err
 
 	_, err = f.Write(contents)
 	if err != nil {
-		os.Remove(f.Name())
 		return err
 	}
 
