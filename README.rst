@@ -66,12 +66,17 @@ How to use
 1. get
 +++++++++++++++
 
+
+Download for your environment from this URL.
+
+https://drone.io/github.com/shirou/devstash/files
+
+
+or get from the repository.
+
 ::
 
    % go get github.com/shirou/devstash
-
-
-TODO: make binary file to each architecture.
 
 
 2. config
