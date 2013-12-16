@@ -15,7 +15,7 @@ func (m Method_file) SendStdin(config Config, tags []string, contents []byte) er
 	u := config.parseUri()
 
 	index_filepath := filepath.Join(u.Path, INDEX_FILE_NAME)
-	m.ensureStoreDir(u.Path, index_filepath)
+	ensureStoreDir(u.Path, index_filepath)
 
 	filename := makeHashedFileName(contents)
 	path := makeHashedDirName(filename)
@@ -29,7 +29,7 @@ func (m Method_file) SendStdin(config Config, tags []string, contents []byte) er
 		os.Exit(1)
 	}
 
-	err = m.addIndex(finfo, index_filepath)
+	err = finfo.addIndex(index_filepath)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -43,7 +43,7 @@ func (m Method_file) SendFile(config Config, tags []string, path string) error {
 	u := config.parseUri()
 
 	index_filepath := filepath.Join(u.Path, INDEX_FILE_NAME)
-	m.ensureStoreDir(u.Path, index_filepath)
+	ensureStoreDir(u.Path, index_filepath)
 
 	fmt.Println("file: not implemented yet") // FIXME
 
@@ -74,39 +74,5 @@ func (m Method_file) store(contents []byte, path string) error {
 
 	err := ioutil.WriteFile(path, []byte(contents), 0600)
 	return err
-}
-
-// add file info to index file (not FM-index)
-func (m Method_file) addIndex(finfo FileInfo, index_path string) error {
-	f, err := os.OpenFile(index_path, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	append_line := finfo.MakeIndexFormat() + "\n"
-
-	if _, err = f.WriteString(append_line); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m Method_file) ensureStoreDir(path string, index_filepath string) {
-	// checking store dir. creates if not exists
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		fmt.Println(path + " is not exists. Creating...")
-		err := os.MkdirAll(path, 0700)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		// create empty index file
-		_, err = os.Create(index_filepath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-	}
 
 }

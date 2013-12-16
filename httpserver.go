@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"os"
+	"io"
+	"mime/multipart"
 )
 
 type DevStashHTTP struct {
@@ -16,7 +19,48 @@ type DevStashHTTP struct {
 }
 
 func (d DevStashHTTP) storeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	if r.Method != "POST"{
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	//parse the multipart
+	err := r.ParseMultipartForm(100000)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	m := r.MultipartForm
+
+	files := m.File["devstash"]
+
+	index_filepath := filepath.Join(d.Config.Server.Directory, INDEX_FILE_NAME)
+
+	for i, _ := range files {
+		file, err := files[i].Open()
+		defer file.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		dst, contents, err := d.storeMultiPartFile(file)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		finfo := NewFileInfoWithAddr([]string{}, contents, dst, files[i].Filename,"", r.RemoteAddr)
+
+		err = finfo.addIndex(index_filepath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+	}
+	fmt.Fprintf(w, "Uploaded, %q", html.EscapeString(r.URL.Path))
 }
 
 func (d DevStashHTTP) listHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,8 +100,8 @@ func (d DevStashHTTP) showHandler(w http.ResponseWriter, r *http.Request) {
 func (d DevStashHTTP) StartHTTPServer() {
 	port := d.Config.Server.Port
 
-	http.HandleFunc("/p", d.storeHandler)
 	http.HandleFunc("/", d.listHandler)
+	http.HandleFunc("/p", d.storeHandler)
 	http.HandleFunc("/s/", d.showHandler)
 
 	addr := ":" + strconv.Itoa(port)
@@ -67,4 +111,34 @@ func (d DevStashHTTP) StartHTTPServer() {
 	} else {
 		fmt.Println(http.ListenAndServe(addr, nil))
 	}
+}
+
+
+func (d DevStashHTTP) storeMultiPartFile(file multipart.File) (string, []byte, error){
+	contents, err := ioutil.ReadAll(file)
+	if err != nil {
+		return "", []byte{}, err
+	}
+	path := makeHashedDirName(makeHashedFileName(contents))
+	dir := filepath.Dir(path)
+
+	// ensure directory is created
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, 0700)
+		if err != nil {
+			return "", []byte{}, err
+		}
+	}
+
+	dst, err := os.Create(path)
+	defer dst.Close()
+	if err != nil {
+		return "", []byte{}, err
+	}
+	//copy the uploaded file to the destination file
+	if _, err := io.Copy(dst, file); err != nil {
+		return "", []byte{}, err
+	}
+
+	return path, contents, nil
 }

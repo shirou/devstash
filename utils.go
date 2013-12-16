@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"os"
+	"fmt"
 )
 
 const FILENAME_LEN = 40
@@ -79,4 +81,24 @@ func searchFile(filename string, root string) (FileInfo, error) {
 	}
 
 	return FileInfo{}, errors.New("Not found:" + filename)
+}
+
+
+func ensureStoreDir(path string, index_filepath string) {
+	// checking store dir. creates if not exists
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		fmt.Println(path + " is not exists. Creating...")
+		err := os.MkdirAll(path, 0700)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		// create empty index file
+		_, err = os.Create(index_filepath)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+
 }

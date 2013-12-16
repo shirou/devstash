@@ -65,6 +65,28 @@ func NewFileInfo(tags []string, contents []byte, stored string, orig string) Fil
 		os.Exit(1)
 	}
 
+	return newFileInfoImpl(tags, contents, stored, orig, hostname, addrs[1])
+}
+
+
+func NewFileInfoWithAddr(tags []string, contents []byte, stored string, orig string, hostname string, ipaddress string) FileInfo {
+	return newFileInfoImpl(tags, contents, stored, orig, hostname, ipaddress)
+}
+
+
+func newFileInfoImpl(tags []string, contents []byte, stored string, orig string, hostname string, ipaddress string) FileInfo {
+	hostname, err := os.Hostname()
+	if err != nil {
+		fmt.Printf("Could not get hostname: %v\n", err)
+		os.Exit(1)
+	}
+
+	addrs, err := net.LookupHost(hostname)
+	if err != nil {
+		fmt.Printf("Could not get ipaddress: %v\n", err)
+		os.Exit(1)
+	}
+
 	filetype := http.DetectContentType(contents)
 
 	head := ""
@@ -83,6 +105,7 @@ func NewFileInfo(tags []string, contents []byte, stored string, orig string) Fil
 		filetype,
 	}
 }
+
 
 func ReadFileInfo(line string) FileInfo {
 	f := strings.Split(strings.TrimSpace(line), "\t")
@@ -127,3 +150,21 @@ func (finfo FileInfo) Basename() string {
 func (finfo FileInfo) LinkPath() string {
 	return "/s/" + filepath.Base(finfo.Path)
 }
+
+
+// add file info to index file (not FM-index)
+func (finfo FileInfo) addIndex(index_path string) error {
+	f, err := os.OpenFile(index_path, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	append_line := finfo.MakeIndexFormat() + "\n"
+
+	if _, err = f.WriteString(append_line); err != nil {
+		return err
+	}
+	return nil
+}
+
